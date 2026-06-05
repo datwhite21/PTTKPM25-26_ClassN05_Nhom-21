@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mxfile host="Electron" modified="2026-06-05T03:00:00.000Z" agent="5.0" version="20.0.0" type="device">
+  <diagram id="class-diagram" name="Biểu đồ lớp UML">
+    <mxGraphModel dx="1200" dy="800" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="850" pageHeight="1100" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <!-- Class NguoiDung -->
+        <mxCell id="cls-nguoidung" value="&lt;b&gt;NguoiDung&lt;/b&gt;&#10;--&#10;+Long id&#10;+String email&#10;+String matKhau&#10;+String hoTen&#10;+LoaiNguoiDung vaiTro&#10;--&#10;+xacThuc(matKhau: String) Boolean" style="shape=swimlane;fontStyle=1;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLastChild=0;collapsible=1;marginBottom=0;html=1;whiteSpace=wrap;fillColor=#f5f5f5;strokeColor=#666666;" vertex="1" parent="1">
+          <mxGeometry x="80" y="80" width="220" height="150" as="geometry" />
+        </mxCell>
+        <!-- Class SinhVien -->
+        <mxCell id="cls-sinhvien" value="&lt;b&gt;SinhVien&lt;/b&gt;&#10;--&#10;+Long id&#10;+String maSV&#10;+NguoiDung nguoiDung&#10;+Nganh nganh&#10;--&#10;+getTongTinChiHienTai(hocKy) Integer" style="shape=swimlane;fontStyle=1;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLastChild=0;collapsible=1;marginBottom=0;html=1;whiteSpace=wrap;fillColor=#f5f5f5;strokeColor=#666666;" vertex="1" parent="1">
+          <mxGeometry x="80" y="320" width="220" height="130" as="geometry" />
+        </mxCell>
+        <!-- Class GiangVien -->
+        <mxCell id="cls-giangvien" value="&lt;b&gt;GiangVien&lt;/b&gt;&#10;--&#10;+Long id&#10;+String maGV&#10;+NguoiDung nguoiDung&#10;+Khoa khoa" style="shape=swimlane;fontStyle=1;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLastChild=0;collapsible=1;marginBottom=0;html=1;whiteSpace=wrap;fillColor=#f5f5f5;strokeColor=#666666;" vertex="1" parent="1">
+          <mxGeometry x="380" y="80" width="200" height="110" as="geometry" />
+        </mxCell>
+        <!-- Class MonHoc -->
+        <mxCell id="cls-monhoc" value="&lt;b&gt;MonHoc&lt;/b&gt;&#10;--&#10;+Long id&#10;+String maMon&#10;+String tenMon&#10;+Integer soTinChi&#10;+List&amp;lt;MonHoc&amp;gt; monTienQuyet" style="shape=swimlane;fontStyle=1;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLastChild=0;collapsible=1;marginBottom=0;html=1;whiteSpace=wrap;fillColor=#f5f5f5;strokeColor=#666666;" vertex="1" parent="1">
+          <mxGeometry x="380" y="280" width="200" height="130" as="geometry" />
+        </mxCell>
+        <!-- Class LopHocPhan -->
+        <mxCell id="cls-lophocphan" value="&lt;b&gt;LopHocPhan&lt;/b&gt;&#10;--&#10;+Long id&#10;+String maLopHP&#10;+MonHoc monHoc&#10;+GiangVien giangVien&#10;+Integer siSoToiDa&#10;+Integer siSoHienTai&#10;+TrangThaiLopHocPhan trangThai&#10;+List&amp;lt;LichHoc&amp;gt; lichHocs&#10;+DotDangKy dotDangKy&#10;--&#10;+tangSiSo() Void&#10;+giamSiSo() Void&#10;+kiemTraConCho() Boolean" style="shape=swimlane;fontStyle=1;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLastChild=0;collapsible=1;marginBottom=0;html=1;whiteSpace=wrap;fillColor=#f5f5f5;strokeColor=#666666;" vertex="1" parent="1">
+          <mxGeometry x="380" y="480" width="220" height="230" as="geometry" />
+        </mxCell>
+        <!-- Class LichHoc -->
+        <mxCell id="cls-lichhoc" value="&lt;b&gt;LichHoc&lt;/b&gt;&#10;--&#10;+Long id&#10;+Integer thu&#10;+Integer tietBatDau&#10;+Integer tietKetThuc&#10;+String phongHoc" style="shape=swimlane;fontStyle=1;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLastChild=0;collapsible=1;marginBottom=0;html=1;whiteSpace=wrap;fillColor=#f5f5f5;strokeColor=#666666;" vertex="1" parent="1">
+          <mxGeometry x="700" y="480" width="180" height="130" as="geometry" />
+        </mxCell>
+        <!-- Class DangKy -->
+        <mxCell id="cls-dangky" value="&lt;b&gt;DangKy&lt;/b&gt;&#10;--&#10;+Long id&#10;+SinhVien sinhVien&#10;+LopHocPhan lopHocPhan&#10;+LocalDateTime ngayDangKy&#10;+TrangThaiDangKy trangThai" style="shape=swimlane;fontStyle=1;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLastChild=0;collapsible=1;marginBottom=0;html=1;whiteSpace=wrap;fillColor=#f5f5f5;strokeColor=#666666;" vertex="1" parent="1">
+          <mxGeometry x="80" y="540" width="220" height="130" as="geometry" />
+        </mxCell>
+        <!-- Relationships -->
+        <!-- SinhVien to NguoiDung (1-1 association) -->
+        <mxCell id="rel-sv-nd" style="endArrow=none;html=1;rounded=0;exitX=0.5;exitY=0;entryX=0.5;entryY=1;" edge="1" parent="1" source="cls-sinhvien" target="cls-nguoidung">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <!-- DangKy to SinhVien (N-1) -->
+        <mxCell id="rel-dk-sv" style="endArrow=none;html=1;rounded=0;exitX=0.5;exitY=0;entryX=0.5;entryY=1;" edge="1" parent="1" source="cls-dangky" target="cls-sinhvien">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <!-- LopHocPhan to LichHoc (Composition 1-N) -->
+        <mxCell id="rel-lhp-lh" style="endArrow=diamond;endSize=12;html=1;rounded=0;exitX=1;exitY=0.5;entryX=0;entryY=0.5;" edge="1" parent="1" source="cls-lophocphan" target="cls-lichhoc">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <!-- DangKy to LopHocPhan (N-1) -->
+        <mxCell id="rel-dk-lhp" style="endArrow=none;html=1;rounded=0;exitX=1;exitY=0.5;entryX=0;entryY=0.5;" edge="1" parent="1" source="cls-dangky" target="cls-lophocphan">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>
