@@ -13,7 +13,7 @@ todos:
     status: completed
   - id: phase3-arch
     content: Viết Design/04-Architecture.md + khởi tạo SRC/backend/ Spring Boot
-    status: pending
+    status: completed
   - id: phase4-ui
     content: Viết Design/05-UI-UX-Wireframes.md + sketch ảnh trong Design/sketches/ + scaffold SRC/frontend/
     status: pending
@@ -40,13 +40,13 @@ todos:
     status: completed
   - id: week6-arch
     content: "Tuần 6 (Phase 3): Viết tài liệu SDD, vẽ biểu đồ Deployment."
-    status: pending
+    status: completed
   - id: week7-patterns
     content: "Tuần 7 (Phase 3): Lập trình các mẫu thiết kế Singleton, Factory và Observer."
-    status: pending
+    status: completed
   - id: week8-core
     content: "Tuần 8 (Phase 4): Hoàn thành toàn bộ API tìm kiếm, đăng ký học phần và lưu trữ ở Backend."
-    status: pending
+    status: completed
   - id: week9-ui
     content: "Tuần 9 (Phase 4): Hoàn thành giao diện React, tích hợp API Axios chọn nhiều lớp học phần."
     status: pending

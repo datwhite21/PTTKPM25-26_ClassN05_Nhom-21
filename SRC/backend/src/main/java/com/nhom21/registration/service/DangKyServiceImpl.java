@@ -27,6 +27,9 @@ public class DangKyServiceImpl implements IDangKyService {
     @Autowired
     private KetQuaHocTapRepository ketQuaHocTapRepository;
 
+    @Autowired
+    private MonHocRepository monHocRepository;
+
     @Override
     @Transactional
     public DangKy thucHienDangKy(Long sinhVienId, Long lopHPId) {
@@ -120,11 +123,9 @@ public class DangKyServiceImpl implements IDangKyService {
 
     @Override
     public boolean kiemTraDieuKienTienQuyet(Long sinhVienId, Long monHocId) {
-        LopHocPhan lhp = lopHocPhanRepository.findById(monHocId).orElse(null);
-        MonHoc mh = lhp != null ? lhp.getMonHoc() : null;
+        MonHoc mh = monHocRepository.findById(monHocId).orElse(null);
         if (mh == null) {
-            // If it's a raw MonHoc lookup
-            return true; 
+            return true;
         }
         List<MonHoc> tienQuyets = mh.getMonTienQuyet();
         if (tienQuyets == null || tienQuyets.isEmpty()) {
@@ -160,5 +161,10 @@ public class DangKyServiceImpl implements IDangKyService {
             }
         }
         return false;
+    }
+
+    @Override
+    public List<DangKy> layDanhSachDangKySinhVien(Long sinhVienId) {
+        return dangKyRepository.findBySinhVienIdAndTrangThai(sinhVienId, TrangThaiDangKy.THANH_CONG);
     }
 }

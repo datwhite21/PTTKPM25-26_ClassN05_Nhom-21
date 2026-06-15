@@ -8,4 +8,5 @@ import java.util.Optional;
 @Repository
 public interface SinhVienRepository extends JpaRepository<SinhVien, Long> {
     Optional<SinhVien> findByMaSV(String maSV);
+    Optional<SinhVien> findByNguoiDungId(Long nguoiDungId);
 }

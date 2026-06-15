@@ -1,0 +1,17 @@
+# Maven build files
+target/
+**/target/
+*.class
+
+# Eclipse & VSCode settings
+.classpath
+.project
+.settings/
+.idea/
+.vscode/settings.json
+
+# Temporary/Backup files
+*~
+~$*
+*.tmp
+*.log

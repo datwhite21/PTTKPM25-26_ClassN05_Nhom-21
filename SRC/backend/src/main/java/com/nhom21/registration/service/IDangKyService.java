@@ -8,6 +8,7 @@ public interface IDangKyService {
     DangKy thucHienDangKy(Long sinhVienId, Long lopHPId);
     void huyDangKy(Long dangKyId);
     List<LichHoc> layLichHocSinhVien(Long sinhVienId);
+    List<DangKy> layDanhSachDangKySinhVien(Long sinhVienId);
     boolean kiemTraDieuKienTienQuyet(Long sinhVienId, Long monHocId);
     boolean kiemTraTrungLich(Long sinhVienId, List<LichHoc> lichHocsMoi);
 }

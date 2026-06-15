@@ -12,53 +12,50 @@ import java.util.Map;
 
 @RestController
 @RequestMapping("/api/registrations")
+@CrossOrigin(origins = "*")
 public class DangKyController {
 
     @Autowired
     private IDangKyService dangKyService;
 
+    public static class DangKyRequest {
+        private Long sinhVienId;
+        private Long lopHocPhanId;
+
+        public Long getSinhVienId() { return sinhVienId; }
+        public void setSinhVienId(Long sinhVienId) { this.sinhVienId = sinhVienId; }
+        public Long getLopHocPhanId() { return lopHocPhanId; }
+        public void setLopHocPhanId(Long lopHocPhanId) { this.lopHocPhanId = lopHocPhanId; }
+    }
+
     @PostMapping
-    public ResponseEntity<?> dangKyHocPhan(@RequestBody Map<String, Long> payload) {
-        Long sinhVienId = payload.get("sinhVienId");
-        Long lopHPId = payload.get("lopHocPhanId");
+    public ResponseEntity<DangKy> dangKyHocPhan(@RequestBody DangKyRequest payload) {
+        Long sinhVienId = payload.getSinhVienId();
+        Long lopHPId = payload.getLopHocPhanId();
         
         if (sinhVienId == null || lopHPId == null) {
-            return ResponseEntity.badRequest().body(Map.of("message", "Thiếu thông tin sinhVienId hoặc lopHocPhanId"));
+            throw new IllegalArgumentException("Thiếu thông tin sinhVienId hoặc lopHocPhanId");
         }
 
-        try {
-            DangKy res = dangKyService.thucHienDangKy(sinhVienId, lopHPId);
-            return ResponseEntity.status(HttpStatus.CREATED).body(res);
-        } catch (IllegalArgumentException e) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("message", e.getMessage()));
-        } catch (IllegalStateException e) {
-            return ResponseEntity.status(HttpStatus.CONFLICT).body(Map.of("message", e.getMessage()));
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Map.of("message", "Đã xảy ra lỗi hệ thống!"));
-        }
+        DangKy res = dangKyService.thucHienDangKy(sinhVienId, lopHPId);
+        return ResponseEntity.status(HttpStatus.CREATED).body(res);
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<?> huyDangKy(@PathVariable("id") Long id) {
-        try {
-            dangKyService.huyDangKy(id);
-            return ResponseEntity.ok().body(Map.of("message", "Hủy đăng ký học phần thành công."));
-        } catch (IllegalArgumentException e) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("message", e.getMessage()));
-        } catch (IllegalStateException e) {
-            return ResponseEntity.status(HttpStatus.CONFLICT).body(Map.of("message", e.getMessage()));
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Map.of("message", "Đã xảy ra lỗi hệ thống!"));
-        }
+    public ResponseEntity<Map<String, String>> huyDangKy(@PathVariable("id") Long id) {
+        dangKyService.huyDangKy(id);
+        return ResponseEntity.ok().body(Map.of("message", "Hủy đăng ký học phần thành công."));
     }
 
     @GetMapping("/student/{id}/schedule")
-    public ResponseEntity<?> layLichHoc(@PathVariable("id") Long studentId) {
-        try {
-            List<LichHoc> schedule = dangKyService.layLichHocSinhVien(studentId);
-            return ResponseEntity.ok(schedule);
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Map.of("message", "Không thể truy xuất lịch học!"));
-        }
+    public ResponseEntity<List<LichHoc>> layLichHoc(@PathVariable("id") Long studentId) {
+        List<LichHoc> schedule = dangKyService.layLichHocSinhVien(studentId);
+        return ResponseEntity.ok(schedule);
+    }
+
+    @GetMapping("/student/{id}")
+    public ResponseEntity<List<DangKy>> layDanhSachDangKy(@PathVariable("id") Long studentId) {
+        List<DangKy> registrations = dangKyService.layDanhSachDangKySinhVien(studentId);
+        return ResponseEntity.ok(registrations);
     }
 }

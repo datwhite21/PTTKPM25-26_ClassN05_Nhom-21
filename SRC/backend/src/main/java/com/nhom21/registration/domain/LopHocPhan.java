@@ -11,6 +11,7 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
+@com.fasterxml.jackson.annotation.JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
 public class LopHocPhan {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -40,6 +41,21 @@ public class LopHocPhan {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "dot_dang_ky_id", nullable = false)
     private DotDangKy dotDangKy;
+
+    @OneToMany(mappedBy = "lopHocPhan", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @com.fasterxml.jackson.annotation.JsonIgnoreProperties("lopHocPhan")
+    private List<LichHoc> dsLichHoc;
+
+    public LopHocPhan(Long id, String maLopHP, MonHoc monHoc, GiangVien giangVien, Integer siSoToiDa, Integer siSoHienTai, TrangThaiLopHocPhan trangThai, DotDangKy dotDangKy) {
+        this.id = id;
+        this.maLopHP = maLopHP;
+        this.monHoc = monHoc;
+        this.giangVien = giangVien;
+        this.siSoToiDa = siSoToiDa;
+        this.siSoHienTai = siSoHienTai;
+        this.trangThai = trangThai;
+        this.dotDangKy = dotDangKy;
+    }
 
     public void tangSiSo() {
         if (siSoHienTai >= siSoToiDa) {

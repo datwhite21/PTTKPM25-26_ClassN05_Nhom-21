@@ -11,6 +11,7 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
+@com.fasterxml.jackson.annotation.JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
 public class MonHoc {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -28,8 +29,9 @@ public class MonHoc {
     @ManyToMany(fetch = FetchType.LAZY)
     @JoinTable(
         name = "mon_tien_quyet",
-        joinColumns = @JoinColumn(name = "mon_id"),
+        joinColumns = @JoinColumn(name = "mon_hoc_id"),
         inverseJoinColumns = @JoinColumn(name = "mon_tien_quyet_id")
     )
+    @com.fasterxml.jackson.annotation.JsonIgnoreProperties("monTienQuyet")
     private List<MonHoc> monTienQuyet;
 }
