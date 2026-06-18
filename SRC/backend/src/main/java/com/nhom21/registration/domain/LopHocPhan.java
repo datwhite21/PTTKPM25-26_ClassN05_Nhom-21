@@ -31,6 +31,9 @@ public class LopHocPhan {
     @Column(name = "si_so_toi_da", nullable = false)
     private Integer siSoToiDa;
 
+    @Column(name = "si_so_toi_thieu", nullable = false)
+    private Integer siSoToiThieu = 10;
+
     @Column(name = "si_so_hien_tai", nullable = false)
     private Integer siSoHienTai;
 
@@ -42,7 +45,7 @@ public class LopHocPhan {
     @JoinColumn(name = "dot_dang_ky_id", nullable = false)
     private DotDangKy dotDangKy;
 
-    @OneToMany(mappedBy = "lopHocPhan", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @OneToMany(mappedBy = "lopHocPhan", cascade = CascadeType.ALL, fetch = FetchType.LAZY, orphanRemoval = true)
     @com.fasterxml.jackson.annotation.JsonIgnoreProperties("lopHocPhan")
     private List<LichHoc> dsLichHoc;
 
@@ -52,6 +55,7 @@ public class LopHocPhan {
         this.monHoc = monHoc;
         this.giangVien = giangVien;
         this.siSoToiDa = siSoToiDa;
+        this.siSoToiThieu = 10;
         this.siSoHienTai = siSoHienTai;
         this.trangThai = trangThai;
         this.dotDangKy = dotDangKy;

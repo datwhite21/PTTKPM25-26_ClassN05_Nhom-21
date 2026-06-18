@@ -8,10 +8,12 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.TestPropertySource;
 import java.time.LocalDateTime;
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicInteger;
+import com.nhom21.registration.exception.WaitlistException;
 import static org.junit.jupiter.api.Assertions.*;
 
 @SpringBootTest
@@ -52,12 +54,30 @@ public class DangKyIntegrationTest {
     @Autowired
     private DotDangKyRepository dotDangKyRepository;
 
+    @Autowired
+    private DangKyRepository dangKyRepository;
+
+    @Autowired
+    private LichThiRepository lichThiRepository;
+
+    @Autowired
+    private WaitlistRepository waitlistRepository;
+
+    @Autowired
+    private HoaDonHocPhiRepository hoaDonHocPhiRepository;
+
     private List<Long> sinhVienIds = new ArrayList<>();
     private Long lopHPId;
+    private Long lopHP2Id;
+
 
     @BeforeEach
     void setUp() {
         // Clear database tables to ensure isolation
+        dangKyRepository.deleteAll();
+        waitlistRepository.deleteAll();
+        lichThiRepository.deleteAll();
+        hoaDonHocPhiRepository.deleteAll();
         sinhVienRepository.deleteAll();
         lopHocPhanRepository.deleteAll();
         giangVienRepository.deleteAll();
@@ -79,11 +99,20 @@ public class DangKyIntegrationTest {
         MonHoc mon = monHocRepository.save(new MonHoc(null, "FIT01", "Lap trinh huong doi tuong", 3, new ArrayList<>()));
 
         // 4. Seed DotDangKy (Active period)
-        DotDangKy dot = dotDangKyRepository.save(new DotDangKy(null, "Dot 1", LocalDateTime.now().minusDays(1), LocalDateTime.now().plusDays(10), true));
+        DotDangKy dot = dotDangKyRepository.save(DotDangKy.builder()
+                .tenDot("Dot 1")
+                .ngayMo(LocalDateTime.now().minusDays(1))
+                .ngayDong(LocalDateTime.now().plusDays(10))
+                .trangThaiMo(true)
+                .build());
 
         // 5. Seed LopHocPhan (Max size = 2 to trigger concurrency full exception)
         LopHocPhan lhp = lopHocPhanRepository.save(new LopHocPhan(null, "LHP_OOP", mon, gv, 2, 0, TrangThaiLopHocPhan.MO_DANG_KY, dot));
         lopHPId = lhp.getId();
+
+        LopHocPhan lhp2 = lopHocPhanRepository.save(new LopHocPhan(null, "LHP_OOP_2", mon, gv, 2, 0, TrangThaiLopHocPhan.MO_DANG_KY, dot));
+        lopHP2Id = lhp2.getId();
+
 
         // 6. Seed 5 SinhVien
         for (int i = 1; i <= 5; i++) {
@@ -130,4 +159,120 @@ public class DangKyIntegrationTest {
         LopHocPhan finalLhp = lopHocPhanRepository.findById(lopHPId).orElseThrow();
         assertEquals(2, finalLhp.getSiSoHienTai(), "Final class size must be exactly 2");
     }
+
+    @Test
+    void testDuplicateSubjectRegistration() {
+        Long svId = sinhVienIds.get(0);
+        // Đăng ký lớp OOP đầu tiên thành công
+        assertDoesNotThrow(() -> dangKyService.thucHienDangKy(svId, lopHPId));
+
+        // Đăng ký lớp OOP thứ hai -> phải ném IllegalStateException vì trùng môn học
+        IllegalStateException ex = assertThrows(IllegalStateException.class, () -> {
+            dangKyService.thucHienDangKy(svId, lopHP2Id);
+        });
+        assertTrue(ex.getMessage().contains("lớp học phần khác của môn học này"));
+    }
+
+    @Test
+    void testExamConflictCheck() {
+        Long svId = sinhVienIds.get(0);
+
+        // 1. Lớp 1 (lopHPId) có lịch thi
+        LopHocPhan lhp1 = lopHocPhanRepository.findById(lopHPId).orElseThrow();
+        lichThiRepository.save(LichThi.builder()
+                .lopHocPhan(lhp1)
+                .ngayThi(LocalDate.of(2026, 7, 10))
+                .caThi("CA1")
+                .phongThi("A1-101")
+                .build());
+
+        // 2. Tạo môn học 2 và lớp học phần 3 (lopHP3)
+        MonHoc mon2 = monHocRepository.save(new MonHoc(null, "FIT02", "Cấu trúc dữ liệu", 3, new ArrayList<>()));
+        LopHocPhan lhp3 = lopHocPhanRepository.save(new LopHocPhan(null, "LHP_DSA", mon2, lhp1.getGiangVien(), 30, 0, TrangThaiLopHocPhan.MO_DANG_KY, lhp1.getDotDangKy()));
+        lichThiRepository.save(LichThi.builder()
+                .lopHocPhan(lhp3)
+                .ngayThi(LocalDate.of(2026, 7, 10)) // Cùng ngày
+                .caThi("CA1") // Cùng ca -> Trùng!
+                .phongThi("A1-102")
+                .build());
+
+        // Đăng ký lớp 1 thành công
+        assertDoesNotThrow(() -> dangKyService.thucHienDangKy(svId, lopHPId));
+
+        // Đăng ký lớp 3 -> Bị từ chối vì trùng lịch thi
+        IllegalStateException ex = assertThrows(IllegalStateException.class, () -> {
+            dangKyService.thucHienDangKy(svId, lhp3.getId());
+        });
+        assertTrue(ex.getMessage().contains("Trùng lịch thi"));
+    }
+
+    @Test
+    void testWaitlistPlacement() {
+        Long sv1 = sinhVienIds.get(0);
+        Long sv2 = sinhVienIds.get(1);
+        Long sv3 = sinhVienIds.get(2);
+
+        // Sĩ số tối đa của lopHPId là 2
+        assertDoesNotThrow(() -> dangKyService.thucHienDangKy(sv1, lopHPId));
+        assertDoesNotThrow(() -> dangKyService.thucHienDangKy(sv2, lopHPId));
+
+        // Đăng ký sv3 -> đầy sĩ số -> Phải được ném vào hàng chờ
+        WaitlistException ex = assertThrows(WaitlistException.class, () -> {
+            dangKyService.thucHienDangKy(sv3, lopHPId);
+        });
+        assertTrue(ex.getMessage().contains("WAITLIST: Bạn đã được xếp vào danh sách chờ ở vị trí số 1"));
+
+        // Kiểm tra database có record waitlist
+        List<Waitlist> wlList = waitlistRepository.findByLopHocPhanIdOrderByThuTuAsc(lopHPId);
+        assertEquals(1, wlList.size());
+        assertEquals(sv3, wlList.get(0).getSinhVien().getId());
+        assertEquals(1, wlList.get(0).getThuTu());
+    }
+
+    @Test
+    void testFifoWaitlistPromotion() {
+        Long sv1 = sinhVienIds.get(0);
+        Long sv2 = sinhVienIds.get(1);
+        Long sv3 = sinhVienIds.get(2);
+
+        // Đăng ký sv1 và sv2 (đầy lớp)
+        DangKy dk1 = dangKyService.thucHienDangKy(sv1, lopHPId);
+        dangKyService.thucHienDangKy(sv2, lopHPId);
+
+        // sv3 đăng ký -> vào waitlist
+        assertThrows(WaitlistException.class, () -> dangKyService.thucHienDangKy(sv3, lopHPId));
+
+        // sv1 hủy đăng ký -> sv3 phải được thăng hạng tự động (FIFO)
+        assertDoesNotThrow(() -> dangKyService.huyDangKy(dk1.getId()));
+
+        // Kiểm tra sv3 đăng ký thành công
+        List<DangKy> sv3Dk = dangKyRepository.findBySinhVienIdAndTrangThai(sv3, TrangThaiDangKy.THANH_CONG);
+        assertEquals(1, sv3Dk.size());
+        assertEquals(lopHPId, sv3Dk.get(0).getLopHocPhan().getId());
+
+        // Kiểm tra waitlist trống
+        assertTrue(waitlistRepository.findByLopHocPhanIdOrderByThuTuAsc(lopHPId).isEmpty());
+    }
+
+    @Test
+    void testTuitionInvoiceUpdates() {
+        Long sv1 = sinhVienIds.get(0);
+
+        // Đăng ký OOP (3 tín chỉ) -> Tạo hóa đơn 1,500,000
+        DangKy dk = dangKyService.thucHienDangKy(sv1, lopHPId);
+
+        List<HoaDonHocPhi> invoices = hoaDonHocPhiRepository.findBySinhVienId(sv1);
+        assertEquals(1, invoices.size());
+        assertEquals(3, invoices.get(0).getTongTinChi());
+        assertEquals(1500000.0, invoices.get(0).getTongTien());
+        assertEquals("CHUA_THANH_TOAN", invoices.get(0).getTrangThai());
+
+        // Hủy đăng ký -> Hóa đơn giảm về 0 tín chỉ
+        dangKyService.huyDangKy(dk.getId());
+        invoices = hoaDonHocPhiRepository.findBySinhVienId(sv1);
+        assertEquals(1, invoices.size());
+        assertEquals(0, invoices.get(0).getTongTinChi());
+        assertEquals(0.0, invoices.get(0).getTongTien());
+    }
 }
+

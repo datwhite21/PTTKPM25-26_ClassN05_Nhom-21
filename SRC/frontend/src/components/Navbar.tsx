@@ -61,6 +61,162 @@ const Navbar: React.FC<NavbarProps> = ({ user, onLogout }) => {
         </div>
       </div>
 
+      {/* Navigation Links */}
+      {user && user.vaiTro === 'SINH_VIEN' && (
+        <div style={{ display: 'flex', gap: '20px' }}>
+          <button 
+            onClick={() => navigate('/student/dashboard')} 
+            style={{ 
+              background: 'transparent', 
+              border: 'none', 
+              color: 'var(--text-secondary)', 
+              fontWeight: 600, 
+              cursor: 'pointer',
+              fontSize: '14px',
+              transition: 'var(--transition-smooth)'
+            }}
+            onMouseOver={(e) => (e.currentTarget.style.color = 'var(--accent-primary)')}
+            onMouseOut={(e) => (e.currentTarget.style.color = 'var(--text-secondary)')}
+          >
+            Thời khóa biểu
+          </button>
+          <button 
+            onClick={() => navigate('/student/study-plan')} 
+            style={{ 
+              background: 'transparent', 
+              border: 'none', 
+              color: 'var(--text-secondary)', 
+              fontWeight: 600, 
+              cursor: 'pointer',
+              fontSize: '14px',
+              transition: 'var(--transition-smooth)'
+            }}
+            onMouseOver={(e) => (e.currentTarget.style.color = 'var(--accent-primary)')}
+            onMouseOut={(e) => (e.currentTarget.style.color = 'var(--text-secondary)')}
+          >
+            Chương trình đào tạo
+          </button>
+          <button 
+            onClick={() => navigate('/student/results')} 
+            style={{ 
+              background: 'transparent', 
+              border: 'none', 
+              color: 'var(--text-secondary)', 
+              fontWeight: 600, 
+              cursor: 'pointer',
+              fontSize: '14px',
+              transition: 'var(--transition-smooth)'
+            }}
+            onMouseOver={(e) => (e.currentTarget.style.color = 'var(--accent-primary)')}
+            onMouseOut={(e) => (e.currentTarget.style.color = 'var(--text-secondary)')}
+          >
+            Kết quả học tập
+          </button>
+          <button 
+            onClick={() => navigate('/student/registration')} 
+            style={{ 
+              background: 'transparent', 
+              border: 'none', 
+              color: 'var(--text-secondary)', 
+              fontWeight: 600, 
+              cursor: 'pointer',
+              fontSize: '14px',
+              transition: 'var(--transition-smooth)'
+            }}
+            onMouseOver={(e) => (e.currentTarget.style.color = 'var(--accent-primary)')}
+            onMouseOut={(e) => (e.currentTarget.style.color = 'var(--text-secondary)')}
+          >
+            Đăng ký học
+          </button>
+          <button 
+            onClick={() => navigate('/student/waitlist')} 
+            style={{ 
+              background: 'transparent', 
+              border: 'none', 
+              color: 'var(--text-secondary)', 
+              fontWeight: 600, 
+              cursor: 'pointer',
+              fontSize: '14px',
+              transition: 'var(--transition-smooth)'
+            }}
+            onMouseOver={(e) => (e.currentTarget.style.color = 'var(--accent-primary)')}
+            onMouseOut={(e) => (e.currentTarget.style.color = 'var(--text-secondary)')}
+          >
+            Hàng chờ đăng ký
+          </button>
+          <button 
+            onClick={() => navigate('/student/tuition')} 
+            style={{ 
+              background: 'transparent', 
+              border: 'none', 
+              color: 'var(--text-secondary)', 
+              fontWeight: 600, 
+              cursor: 'pointer',
+              fontSize: '14px',
+              transition: 'var(--transition-smooth)'
+            }}
+            onMouseOver={(e) => (e.currentTarget.style.color = 'var(--accent-primary)')}
+            onMouseOut={(e) => (e.currentTarget.style.color = 'var(--text-secondary)')}
+          >
+            Học phí
+          </button>
+        </div>
+      )}
+
+      {/* Navigation Links for Admin */}
+      {user && user.vaiTro === 'GIAO_VU' && (
+        <div style={{ display: 'flex', gap: '20px' }}>
+          <button 
+            onClick={() => navigate('/admin/course-sections')} 
+            style={{ 
+              background: 'transparent', 
+              border: 'none', 
+              color: 'var(--text-secondary)', 
+              fontWeight: 600, 
+              cursor: 'pointer',
+              fontSize: '14px',
+              transition: 'var(--transition-smooth)'
+            }}
+            onMouseOver={(e) => (e.currentTarget.style.color = 'var(--accent-primary)')}
+            onMouseOut={(e) => (e.currentTarget.style.color = 'var(--text-secondary)')}
+          >
+            Lớp học phần
+          </button>
+          <button 
+            onClick={() => navigate('/admin/management')} 
+            style={{ 
+              background: 'transparent', 
+              border: 'none', 
+              color: 'var(--text-secondary)', 
+              fontWeight: 600, 
+              cursor: 'pointer',
+              fontSize: '14px',
+              transition: 'var(--transition-smooth)'
+            }}
+            onMouseOver={(e) => (e.currentTarget.style.color = 'var(--accent-primary)')}
+            onMouseOut={(e) => (e.currentTarget.style.color = 'var(--text-secondary)')}
+          >
+            Quản lý danh mục
+          </button>
+          <button 
+            onClick={() => navigate('/admin/stats')} 
+            style={{ 
+              background: 'transparent', 
+              border: 'none', 
+              color: 'var(--text-secondary)', 
+              fontWeight: 600, 
+              cursor: 'pointer',
+              fontSize: '14px',
+              transition: 'var(--transition-smooth)'
+            }}
+            onMouseOver={(e) => (e.currentTarget.style.color = 'var(--accent-primary)')}
+            onMouseOut={(e) => (e.currentTarget.style.color = 'var(--text-secondary)')}
+          >
+            Báo cáo & Thống kê
+          </button>
+        </div>
+      )}
+
       {/* User Actions */}
       {user && (
         <div style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>

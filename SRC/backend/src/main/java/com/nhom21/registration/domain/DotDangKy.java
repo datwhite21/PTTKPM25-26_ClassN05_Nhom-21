@@ -28,4 +28,13 @@ public class DotDangKy {
 
     @Column(name = "trang_thai_mo", nullable = false)
     private Boolean trangThaiMo;
+
+    @ManyToMany(fetch = FetchType.LAZY)
+    @JoinTable(
+        name = "dot_dang_ky_nganh",
+        joinColumns = @JoinColumn(name = "dot_dang_ky_id"),
+        inverseJoinColumns = @JoinColumn(name = "nganh_id")
+    )
+    @com.fasterxml.jackson.annotation.JsonIgnoreProperties("dotDangKy")
+    private java.util.List<Nganh> dsNganh;
 }

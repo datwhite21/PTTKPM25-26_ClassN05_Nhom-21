@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import apiClient from '../api/axios';
-import { Calendar, BookOpen, Clock, Award, ChevronRight, Loader2 } from 'lucide-react';
+import { Calendar, BookOpen, Clock, Award, ChevronRight, Loader2, Download } from 'lucide-react';
 
 interface UserData {
   id: number;
@@ -10,6 +10,23 @@ interface UserData {
   vaiTro: string;
   sinhVienId: number;
   maSV: string;
+}
+
+interface MonHoc {
+  id: number;
+  maMon: string;
+  tenMon: string;
+  soTinChi: number;
+}
+
+interface KetQuaHocTap {
+  id: number;
+  monHoc: MonHoc;
+  diemChuyenCan: number | null;
+  diemGiuaKy: number | null;
+  diemCuoiKy: number | null;
+  diemTrungBinh: number;
+  trangThaiDat: boolean;
 }
 
 interface LichHoc {
@@ -40,6 +57,7 @@ interface LichHoc {
 const StudentDashboard: React.FC = () => {
   const [user, setUser] = useState<UserData | null>(null);
   const [schedule, setSchedule] = useState<LichHoc[]>([]);
+  const [passedCredits, setPassedCredits] = useState<number>(0);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const navigate = useNavigate();
@@ -56,19 +74,100 @@ const StudentDashboard: React.FC = () => {
       return;
     }
     setUser(parsedUser);
-    fetchSchedule(parsedUser.sinhVienId);
+    fetchDashboardData(parsedUser.sinhVienId);
   }, [navigate]);
 
-  const fetchSchedule = async (studentId: number) => {
+  const fetchDashboardData = async (studentId: number) => {
     try {
       setLoading(true);
-      const response = await apiClient.get(`/registrations/student/${studentId}/schedule`);
-      setSchedule(response.data);
+      const [scheduleRes, resultsRes] = await Promise.all([
+        apiClient.get(`/registrations/student/${studentId}/schedule`),
+        apiClient.get(`/results/student/${studentId}`)
+      ]);
+      setSchedule(scheduleRes.data || []);
+      const results: KetQuaHocTap[] = resultsRes.data || [];
+      const passed = results
+        .filter(r => r.trangThaiDat)
+        .reduce((sum, r) => sum + (r.monHoc?.soTinChi || 0), 0);
+      setPassedCredits(passed);
     } catch (err: any) {
-      setError(err.message || 'Không thể tải lịch học!');
+      setError(err.message || 'Không thể tải thông tin!');
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleExportICS = () => {
+    if (schedule.length === 0) return;
+
+    let icsContent = [
+      'BEGIN:VCALENDAR',
+      'VERSION:2.0',
+      'PRODID:-//Nhom 21//Registration System//EN',
+      'CALSCALE:GREGORIAN',
+      'METHOD:PUBLISH'
+    ];
+
+    const dayToDateStr: Record<number, string> = {
+      2: '20260907', // Thứ 2 (Monday)
+      3: '20260908', // Thứ 3
+      4: '20260909', // Thứ 4
+      5: '20260910', // Thứ 5
+      6: '20260911', // Thứ 6
+      7: '20260912', // Thứ 7
+      8: '20260913'  // Chủ Nhật
+    };
+
+    const dayToIcsCode: Record<number, string> = {
+      2: 'MO', 3: 'TU', 4: 'WE', 5: 'TH', 6: 'FR', 7: 'SA', 8: 'SU'
+    };
+
+    const startTimes: Record<number, string> = {
+      1: "070000", 2: "075000", 3: "084000",
+      4: "094000", 5: "103000", 6: "112000",
+      7: "130000", 8: "135000", 9: "144000",
+      10: "154000", 11: "163000", 12: "172000"
+    };
+
+    const endTimes: Record<number, string> = {
+      1: "074500", 2: "083500", 3: "093000",
+      4: "102500", 5: "111500", 6: "121000",
+      7: "134500", 8: "143500", 9: "153000",
+      10: "162500", 11: "171500", 12: "181000"
+    };
+
+    schedule.forEach(item => {
+      const dateStr = dayToDateStr[item.thu] || '20260907';
+      const startT = startTimes[item.tietBatDau] || '070000';
+      const endT = endTimes[item.tietKetThuc] || '093000';
+      const dayCode = dayToIcsCode[item.thu] || 'MO';
+
+      const subjectName = item.lopHocPhan?.monHoc?.tenMon || 'Môn học';
+      const classCode = item.lopHocPhan?.maLopHP || 'Lớp học';
+      const lecturerName = item.lopHocPhan?.giangVien?.nguoiDung?.hoTen || 'Chưa phân công';
+      const location = item.phongHoc || 'Chưa xếp phòng';
+
+      icsContent.push('BEGIN:VEVENT');
+      icsContent.push(`UID:lhp-${item.id}-${item.lopHocPhan?.id || 0}@nhom21.registration`);
+      icsContent.push(`DTSTAMP:${new Date().toISOString().replace(/[-:]/g, '').split('.')[0]}Z`);
+      icsContent.push(`DTSTART;TZID=Asia/Ho_Chi_Minh:${dateStr}T${startT}`);
+      icsContent.push(`DTEND;TZID=Asia/Ho_Chi_Minh:${dateStr}T${endT}`);
+      icsContent.push(`RRULE:FREQ=WEEKLY;UNTIL=20261220T235959Z;BYDAY=${dayCode}`);
+      icsContent.push(`SUMMARY:${subjectName} (${classCode})`);
+      icsContent.push(`LOCATION:${location}`);
+      icsContent.push(`DESCRIPTION:Giảng viên: ${lecturerName}\\nLớp học phần: ${classCode}`);
+      icsContent.push('END:VEVENT');
+    });
+
+    icsContent.push('END:VCALENDAR');
+
+    const blob = new Blob([icsContent.join('\r\n')], { type: 'text/calendar;charset=utf-8' });
+    const link = document.createElement('a');
+    link.href = window.URL.createObjectURL(blob);
+    link.setAttribute('download', `TKB_HocKy1_2026_2027_${user?.maSV || 'SinhVien'}.ics`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
   };
 
   // Group schedule to calculate total registered credits
@@ -84,7 +183,7 @@ const StudentDashboard: React.FC = () => {
 
   const uniqueClasses = getUniqueClasses();
   const registeredCredits = uniqueClasses.reduce((sum, item) => sum + (item.monHoc?.soTinChi || 0), 0);
-  const totalAccumulatedCredits = 72 + registeredCredits; // 72 is base credits for simulation
+  const totalAccumulatedCredits = passedCredits + registeredCredits;
 
   // Helper to place schedule items in UI grid
   // Rows: Tiết 1-3, Tiết 4-6, Tiết 7-9, Tiết 10-12
@@ -198,7 +297,7 @@ const StudentDashboard: React.FC = () => {
               }} />
             </div>
             <span style={{ fontSize: '12px', color: 'var(--text-secondary)', display: 'block', marginTop: '6px' }}>
-              Đã tích lũy: 72 TC | Đăng ký mới: {registeredCredits} TC
+              Đã tích lũy: {passedCredits} TC | Đăng ký mới: {registeredCredits} TC
             </span>
           </div>
         </div>
@@ -243,9 +342,27 @@ const StudentDashboard: React.FC = () => {
             <Calendar size={20} style={{ color: 'var(--accent-primary)' }} />
             <span>Thời Khóa Biểu Tuần</span>
           </h2>
-          <span style={{ fontSize: '13px', color: 'var(--text-secondary)' }}>
-            Học kỳ 1 (2026 - 2027)
-          </span>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+            <span style={{ fontSize: '13px', color: 'var(--text-secondary)' }}>
+              Học kỳ 1 (2026 - 2027)
+            </span>
+            {schedule.length > 0 && (
+              <button 
+                onClick={handleExportICS} 
+                className="btn btn-secondary" 
+                style={{ 
+                  display: 'flex', 
+                  alignItems: 'center', 
+                  gap: '6px', 
+                  padding: '8px 16px', 
+                  fontSize: '13px' 
+                }}
+              >
+                <Download size={16} />
+                <span>Xuất file .ics</span>
+              </button>
+            )}
+          </div>
         </div>
 
         {schedule.length === 0 ? (

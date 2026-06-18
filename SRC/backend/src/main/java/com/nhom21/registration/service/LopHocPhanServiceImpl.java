@@ -51,6 +51,11 @@ public class LopHocPhanServiceImpl implements ILopHocPhanService {
         if (lopHocPhanRepository.findByMaLopHP(lopHocPhan.getMaLopHP()).isPresent()) {
             throw new IllegalStateException("Mã lớp học phần đã tồn tại: " + lopHocPhan.getMaLopHP());
         }
+        if (lopHocPhan.getDsLichHoc() != null) {
+            for (com.nhom21.registration.domain.LichHoc lh : lopHocPhan.getDsLichHoc()) {
+                lh.setLopHocPhan(lopHocPhan);
+            }
+        }
         return lopHocPhanRepository.save(lopHocPhan);
     }
 
@@ -66,6 +71,9 @@ public class LopHocPhanServiceImpl implements ILopHocPhanService {
 
         existing.setMaLopHP(details.getMaLopHP());
         existing.setSiSoToiDa(details.getSiSoToiDa());
+        if (details.getSiSoToiThieu() != null) {
+            existing.setSiSoToiThieu(details.getSiSoToiThieu());
+        }
         existing.setTrangThai(details.getTrangThai());
         if (details.getGiangVien() != null) {
             existing.setGiangVien(details.getGiangVien());
@@ -76,6 +84,20 @@ public class LopHocPhanServiceImpl implements ILopHocPhanService {
         if (details.getDotDangKy() != null) {
             existing.setDotDangKy(details.getDotDangKy());
         }
+        
+        // Cập nhật dsLichHoc
+        if (existing.getDsLichHoc() != null) {
+            existing.getDsLichHoc().clear();
+        } else {
+            existing.setDsLichHoc(new java.util.ArrayList<>());
+        }
+        if (details.getDsLichHoc() != null) {
+            for (com.nhom21.registration.domain.LichHoc lh : details.getDsLichHoc()) {
+                lh.setLopHocPhan(existing);
+                existing.getDsLichHoc().add(lh);
+            }
+        }
+        
         return lopHocPhanRepository.save(existing);
     }
 

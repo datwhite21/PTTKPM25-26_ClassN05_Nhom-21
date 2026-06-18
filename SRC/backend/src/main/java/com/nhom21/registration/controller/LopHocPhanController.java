@@ -27,8 +27,21 @@ public class LopHocPhanController {
     @Autowired
     private DotDangKyRepository dotDangKyRepository;
 
+    @Autowired
+    private LichThiRepository lichThiRepository;
+
+    @GetMapping("/lich-thi")
+    public ResponseEntity<List<LichThi>> layTatCaLichThi() {
+        return ResponseEntity.ok(lichThiRepository.findAll());
+    }
+
     @GetMapping("/admin/mon-hoc")
     public ResponseEntity<List<MonHoc>> layTatCaMonHoc() {
+        return ResponseEntity.ok(monHocRepository.findAll());
+    }
+
+    @GetMapping("/mon-hoc")
+    public ResponseEntity<List<MonHoc>> layDanhSachMonHoc() {
         return ResponseEntity.ok(monHocRepository.findAll());
     }
 

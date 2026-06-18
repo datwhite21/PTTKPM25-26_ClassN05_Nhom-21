@@ -36,10 +36,18 @@ interface LopHocPhan {
   maLopHP: string;
   siSoHienTai: number;
   siSoToiDa: number;
+  siSoToiThieu: number;
   trangThai: string;
   monHoc: MonHoc;
   giangVien: GiangVien;
   dotDangKy: DotDangKy;
+  dsLichHoc?: {
+    id?: number;
+    thu: number;
+    tietBatDau: number;
+    tietKetThuc: number;
+    phongHoc: string;
+  }[];
 }
 
 const AdminCourseSections: React.FC = () => {
@@ -58,11 +66,13 @@ const AdminCourseSections: React.FC = () => {
   const [editingId, setEditingId] = useState<number | null>(null);
   const [formMaLop, setFormMaLop] = useState('');
   const [formSiSoToiDa, setFormSiSoToiDa] = useState(40);
+  const [formSiSoToiThieu, setFormSiSoToiThieu] = useState(10);
   const [formSiSoHienTai, setFormSiSoHienTai] = useState(0);
   const [formTrangThai, setFormTrangThai] = useState('MOI_TAO');
   const [formMonHocId, setFormMonHocId] = useState('');
   const [formGiangVienId, setFormGiangVienId] = useState('');
   const [formDotId, setFormDotId] = useState('');
+  const [formSessions, setFormSessions] = useState<{ thu: number; tietBatDau: number; tietKetThuc: number; phongHoc: string; }[]>([]);
   
   const navigate = useNavigate();
 
@@ -112,11 +122,13 @@ const AdminCourseSections: React.FC = () => {
     setEditingId(null);
     setFormMaLop('');
     setFormSiSoToiDa(40);
+    setFormSiSoToiThieu(10);
     setFormSiSoHienTai(0);
     setFormTrangThai('MOI_TAO');
     if (courses.length > 0) setFormMonHocId(courses[0].id.toString());
     if (lecturers.length > 0) setFormGiangVienId(lecturers[0].id.toString());
     if (periods.length > 0) setFormDotId(periods[0].id.toString());
+    setFormSessions([]);
     setModalOpen(true);
   };
 
@@ -124,11 +136,18 @@ const AdminCourseSections: React.FC = () => {
     setEditingId(lop.id);
     setFormMaLop(lop.maLopHP);
     setFormSiSoToiDa(lop.siSoToiDa);
+    setFormSiSoToiThieu(lop.siSoToiThieu || 10);
     setFormSiSoHienTai(lop.siSoHienTai);
     setFormTrangThai(lop.trangThai);
     setFormMonHocId(lop.monHoc?.id?.toString() || '');
     setFormGiangVienId(lop.giangVien?.id?.toString() || '');
     setFormDotId(lop.dotDangKy?.id?.toString() || '');
+    setFormSessions(lop.dsLichHoc ? lop.dsLichHoc.map(lh => ({
+      thu: lh.thu,
+      tietBatDau: lh.tietBatDau,
+      tietKetThuc: lh.tietKetThuc,
+      phongHoc: lh.phongHoc
+    })) : []);
     setModalOpen(true);
   };
 
@@ -140,11 +159,13 @@ const AdminCourseSections: React.FC = () => {
     const payload = {
       maLopHP: formMaLop,
       siSoToiDa: Number(formSiSoToiDa),
+      siSoToiThieu: Number(formSiSoToiThieu),
       siSoHienTai: formSiSoHienTai,
       trangThai: formTrangThai,
       monHoc: { id: Number(formMonHocId) },
       giangVien: { id: Number(formGiangVienId) },
-      dotDangKy: { id: Number(formDotId) }
+      dotDangKy: { id: Number(formDotId) },
+      dsLichHoc: formSessions
     };
 
     try {
@@ -243,7 +264,8 @@ const AdminCourseSections: React.FC = () => {
                   <th>Số TC</th>
                   <th>Giảng Viên</th>
                   <th>Đợt Đăng Ký</th>
-                  <th>Sĩ Số</th>
+                  <th>Lịch Học</th>
+                  <th>Sĩ Số (Min/Max)</th>
                   <th>Trạng Thái</th>
                   <th style={{ textAlign: 'center' }}>Thao tác</th>
                 </tr>
@@ -260,7 +282,24 @@ const AdminCourseSections: React.FC = () => {
                     <td>{lop.giangVien?.nguoiDung?.hoTen || 'Chưa phân công'}</td>
                     <td>{lop.dotDangKy?.tenDot || 'Chưa gán'}</td>
                     <td>
-                      <span style={{ fontWeight: '600' }}>{lop.siSoHienTai}</span> / {lop.siSoToiDa}
+                      {lop.dsLichHoc && lop.dsLichHoc.length > 0 ? (
+                        lop.dsLichHoc.map((lh, idx) => (
+                          <div key={idx} style={{ fontSize: '12px' }}>
+                            Thứ {lh.thu === 8 ? 'CN' : lh.thu} (Tiết {lh.tietBatDau}-{lh.tietKetThuc}) [{lh.phongHoc}]
+                          </div>
+                        ))
+                      ) : (
+                        <span style={{ color: 'var(--text-tertiary)', fontSize: '12px' }}>Chưa xếp lịch</span>
+                      )}
+                    </td>
+                    <td>
+                      <span style={{ fontWeight: '600' }}>{lop.siSoHienTai}</span> / {lop.siSoToiDa} <span style={{ fontSize: '11px', color: 'var(--text-secondary)' }}>(Min: {lop.siSoToiThieu})</span>
+                      {lop.siSoHienTai < (lop.siSoToiThieu || 10) && (
+                        <div style={{ color: 'var(--color-danger)', fontSize: '11px', display: 'flex', alignItems: 'center', gap: '3px', marginTop: '4px' }}>
+                          <AlertCircle size={12} />
+                          <span>Dưới chỉ tiêu</span>
+                        </div>
+                      )}
                     </td>
                     <td>{getTrangThaiBadge(lop.trangThai)}</td>
                     <td style={{ textAlign: 'center' }}>
@@ -316,8 +355,8 @@ const AdminCourseSections: React.FC = () => {
             </div>
 
             <form onSubmit={handleSave} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-              {/* Row 1: Code and Max Size */}
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+              {/* Row 1: Code, Max Size, Min Size */}
+              <div style={{ display: 'grid', gridTemplateColumns: '1.5fr 1fr 1fr', gap: '16px' }}>
                 <div>
                   <label style={{ display: 'block', fontSize: '13px', fontWeight: '600', marginBottom: '6px' }}>
                     Mã Lớp Học Phần
@@ -328,6 +367,18 @@ const AdminCourseSections: React.FC = () => {
                     placeholder="Ví dụ: INT3110_L01"
                     value={formMaLop}
                     onChange={(e) => setFormMaLop(e.target.value)}
+                  />
+                </div>
+                <div>
+                  <label style={{ display: 'block', fontSize: '13px', fontWeight: '600', marginBottom: '6px' }}>
+                    Sĩ số tối thiểu
+                  </label>
+                  <input
+                    type="number"
+                    required
+                    min="1"
+                    value={formSiSoToiThieu}
+                    onChange={(e) => setFormSiSoToiThieu(Number(e.target.value))}
                   />
                 </div>
                 <div>
@@ -399,6 +450,122 @@ const AdminCourseSections: React.FC = () => {
                   <option value="DANG_HOC">Đang học</option>
                   <option value="KET_THUC">Kết thúc</option>
                 </select>
+              </div>
+
+              {/* Timetable schedule config */}
+              <div style={{ borderTop: '1px solid var(--border-color)', paddingTop: '16px', marginTop: '8px' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
+                  <label style={{ fontSize: '14px', fontWeight: '700', color: 'var(--text-primary)' }}>
+                    Lịch học tuần (Chi tiết buổi học)
+                  </label>
+                  <button
+                    type="button"
+                    className="btn btn-secondary"
+                    onClick={() => setFormSessions([...formSessions, { thu: 2, tietBatDau: 1, tietKetThuc: 3, phongHoc: 'A1-101' }])}
+                    style={{ padding: '6px 12px', fontSize: '12px' }}
+                  >
+                    + Thêm buổi học
+                  </button>
+                </div>
+
+                {formSessions.length === 0 ? (
+                  <p style={{ color: 'var(--text-secondary)', fontSize: '13px', fontStyle: 'italic', textAlign: 'center', padding: '12px 0' }}>
+                    Chưa thiết lập buổi học nào cho lớp học phần này.
+                  </p>
+                ) : (
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                    {formSessions.map((session, index) => (
+                      <div key={index} style={{
+                        display: 'grid',
+                        gridTemplateColumns: '1.2fr 1fr 1fr 1.5fr auto',
+                        gap: '8px',
+                        alignItems: 'center',
+                        backgroundColor: 'var(--bg-tertiary)',
+                        padding: '8px',
+                        borderRadius: 'var(--border-radius-sm)'
+                      }}>
+                        <div>
+                          <select
+                            value={session.thu}
+                            onChange={(e) => {
+                              const updated = [...formSessions];
+                              updated[index].thu = Number(e.target.value);
+                              setFormSessions(updated);
+                            }}
+                            style={{ padding: '6px', fontSize: '13px' }}
+                          >
+                            <option value={2}>Thứ 2</option>
+                            <option value={3}>Thứ 3</option>
+                            <option value={4}>Thứ 4</option>
+                            <option value={5}>Thứ 5</option>
+                            <option value={6}>Thứ 6</option>
+                            <option value={7}>Thứ 7</option>
+                            <option value={8}>Chủ Nhật</option>
+                          </select>
+                        </div>
+                        <div>
+                          <select
+                            value={session.tietBatDau}
+                            onChange={(e) => {
+                              const updated = [...formSessions];
+                              updated[index].tietBatDau = Number(e.target.value);
+                              setFormSessions(updated);
+                            }}
+                            style={{ padding: '6px', fontSize: '13px' }}
+                          >
+                            {Array.from({ length: 12 }, (_, i) => i + 1).map(t => (
+                              <option key={t} value={t}>Tiết {t}</option>
+                            ))}
+                          </select>
+                        </div>
+                        <div>
+                          <select
+                            value={session.tietKetThuc}
+                            onChange={(e) => {
+                              const updated = [...formSessions];
+                              updated[index].tietKetThuc = Number(e.target.value);
+                              setFormSessions(updated);
+                            }}
+                            style={{ padding: '6px', fontSize: '13px' }}
+                          >
+                            {Array.from({ length: 12 }, (_, i) => i + 1).map(t => (
+                              <option key={t} value={t}>Tiết {t}</option>
+                            ))}
+                          </select>
+                        </div>
+                        <div>
+                          <input
+                            type="text"
+                            required
+                            placeholder="Phòng (ví dụ: A1-101)"
+                            value={session.phongHoc}
+                            onChange={(e) => {
+                              const updated = [...formSessions];
+                              updated[index].phongHoc = e.target.value;
+                              setFormSessions(updated);
+                            }}
+                            style={{ padding: '6px', fontSize: '13px', margin: 0 }}
+                          />
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setFormSessions(formSessions.filter((_, i) => i !== index));
+                          }}
+                          style={{
+                            backgroundColor: 'transparent',
+                            border: 'none',
+                            color: 'var(--color-danger)',
+                            cursor: 'pointer',
+                            padding: '4px'
+                          }}
+                        >
+                          <Trash2 size={16} />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
 
               {/* Action Buttons */}

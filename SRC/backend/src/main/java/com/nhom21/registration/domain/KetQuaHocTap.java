@@ -24,11 +24,29 @@ public class KetQuaHocTap {
     @JoinColumn(name = "mon_hoc_id", nullable = false)
     private MonHoc monHoc;
 
+    @Column(name = "diem_chuyen_can")
+    private Double diemChuyenCan;
+
+    @Column(name = "diem_giua_ky")
+    private Double diemGiuaKy;
+
+    @Column(name = "diem_cuoi_ky")
+    private Double diemCuoiKy;
+
     @Column(name = "diem_trung_binh", nullable = false)
     private Double diemTrungBinh;
 
     @Column(name = "trang_thai_dat", nullable = false)
     private Boolean trangThaiDat;
+
+    @PrePersist
+    @PreUpdate
+    public void tinhDiemTrungBinh() {
+        if (this.diemChuyenCan != null && this.diemGiuaKy != null && this.diemCuoiKy != null) {
+            this.diemTrungBinh = Math.round((this.diemChuyenCan * 0.1 + this.diemGiuaKy * 0.3 + this.diemCuoiKy * 0.6) * 10.0) / 10.0;
+            this.trangThaiDat = this.diemTrungBinh >= 4.0;
+        }
+    }
 
     public boolean kiemTraDat() {
         return this.trangThaiDat != null ? this.trangThaiDat : false;

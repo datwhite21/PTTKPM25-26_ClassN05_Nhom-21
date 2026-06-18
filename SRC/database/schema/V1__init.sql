@@ -1,5 +1,9 @@
 -- Database Initialization Script for Course Registration System
 -- Clean up existing tables
+DROP TABLE IF EXISTS waitlist;
+DROP TABLE IF EXISTS dot_dang_ky_nganh;
+DROP TABLE IF EXISTS hoa_don_hoc_phi;
+DROP TABLE IF EXISTS lich_thi;
 DROP TABLE IF EXISTS ket_qua_hoc_tap;
 DROP TABLE IF EXISTS dang_ky;
 DROP TABLE IF EXISTS lich_hoc;
@@ -84,6 +88,15 @@ CREATE TABLE dot_dang_ky (
     trang_thai_mo BOOLEAN NOT NULL DEFAULT FALSE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
+-- 8.5. Table dot_dang_ky_nganh (many-to-many relationship)
+CREATE TABLE dot_dang_ky_nganh (
+    dot_dang_ky_id BIGINT NOT NULL,
+    nganh_id BIGINT NOT NULL,
+    PRIMARY KEY (dot_dang_ky_id, nganh_id),
+    CONSTRAINT fk_ddkn_dot FOREIGN KEY (dot_dang_ky_id) REFERENCES dot_dang_ky(id) ON DELETE CASCADE,
+    CONSTRAINT fk_ddkn_nganh FOREIGN KEY (nganh_id) REFERENCES nganh(id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
 -- 9. Table lop_hoc_phan
 CREATE TABLE lop_hoc_phan (
     id BIGINT AUTO_INCREMENT PRIMARY KEY,
@@ -91,6 +104,7 @@ CREATE TABLE lop_hoc_phan (
     mon_hoc_id BIGINT NOT NULL,
     giang_vien_id BIGINT NOT NULL,
     si_so_toi_da INT NOT NULL CHECK (si_so_toi_da > 0),
+    si_so_toi_thieu INT NOT NULL DEFAULT 10,
     si_so_hien_tai INT NOT NULL DEFAULT 0,
     trang_thai VARCHAR(50) NOT NULL,
     dot_dang_ky_id BIGINT NOT NULL,
@@ -128,9 +142,46 @@ CREATE TABLE ket_qua_hoc_tap (
     id BIGINT AUTO_INCREMENT PRIMARY KEY,
     sinh_vien_id BIGINT NOT NULL,
     mon_hoc_id BIGINT NOT NULL,
+    diem_chuyen_can DOUBLE DEFAULT NULL,
+    diem_giua_ky DOUBLE DEFAULT NULL,
+    diem_cuoi_ky DOUBLE DEFAULT NULL,
     diem_trung_binh DOUBLE NOT NULL CHECK (diem_trung_binh >= 0.0 AND diem_trung_binh <= 10.0),
     trang_thai_dat BOOLEAN NOT NULL DEFAULT FALSE,
     CONSTRAINT fk_kq_sinhvien FOREIGN KEY (sinh_vien_id) REFERENCES sinh_vien(id) ON DELETE CASCADE,
     CONSTRAINT fk_kq_mon FOREIGN KEY (mon_hoc_id) REFERENCES mon_hoc(id),
     CONSTRAINT uq_sv_mon UNIQUE (sinh_vien_id, mon_hoc_id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- 13. Table waitlist
+CREATE TABLE waitlist (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    sinh_vien_id BIGINT NOT NULL,
+    lop_hoc_phan_id BIGINT NOT NULL,
+    ngay_cho DATETIME NOT NULL,
+    thu_tu INT NOT NULL,
+    CONSTRAINT fk_waitlist_sinhvien FOREIGN KEY (sinh_vien_id) REFERENCES sinh_vien(id) ON DELETE CASCADE,
+    CONSTRAINT fk_waitlist_lophp FOREIGN KEY (lop_hoc_phan_id) REFERENCES lop_hoc_phan(id) ON DELETE CASCADE,
+    CONSTRAINT uq_sv_lophp_wait UNIQUE (sinh_vien_id, lop_hoc_phan_id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- 14. Table hoa_don_hoc_phi
+CREATE TABLE hoa_don_hoc_phi (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    sinh_vien_id BIGINT NOT NULL,
+    hoc_ky VARCHAR(50) NOT NULL,
+    tong_tin_chi INT NOT NULL,
+    tong_tien DOUBLE NOT NULL,
+    trang_thai VARCHAR(50) NOT NULL,
+    ngay_thanh_toan DATETIME DEFAULT NULL,
+    CONSTRAINT fk_hoadon_sinhvien FOREIGN KEY (sinh_vien_id) REFERENCES sinh_vien(id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- 15. Table lich_thi
+CREATE TABLE lich_thi (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    lop_hoc_phan_id BIGINT NOT NULL UNIQUE,
+    ngay_thi DATE NOT NULL,
+    ca_thi VARCHAR(50) NOT NULL,
+    phong_thi VARCHAR(50) NOT NULL,
+    CONSTRAINT fk_lichthi_lophp FOREIGN KEY (lop_hoc_phan_id) REFERENCES lop_hoc_phan(id) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;

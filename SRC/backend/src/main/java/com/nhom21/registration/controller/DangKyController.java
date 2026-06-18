@@ -3,6 +3,7 @@ package com.nhom21.registration.controller;
 import com.nhom21.registration.domain.DangKy;
 import com.nhom21.registration.domain.LichHoc;
 import com.nhom21.registration.service.IDangKyService;
+import com.nhom21.registration.exception.WaitlistException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -29,7 +30,7 @@ public class DangKyController {
     }
 
     @PostMapping
-    public ResponseEntity<DangKy> dangKyHocPhan(@RequestBody DangKyRequest payload) {
+    public ResponseEntity<?> dangKyHocPhan(@RequestBody DangKyRequest payload) {
         Long sinhVienId = payload.getSinhVienId();
         Long lopHPId = payload.getLopHocPhanId();
         
@@ -37,8 +38,13 @@ public class DangKyController {
             throw new IllegalArgumentException("Thiếu thông tin sinhVienId hoặc lopHocPhanId");
         }
 
-        DangKy res = dangKyService.thucHienDangKy(sinhVienId, lopHPId);
-        return ResponseEntity.status(HttpStatus.CREATED).body(res);
+        try {
+            DangKy res = dangKyService.thucHienDangKy(sinhVienId, lopHPId);
+            return ResponseEntity.status(HttpStatus.CREATED).body(res);
+        } catch (WaitlistException e) {
+            return ResponseEntity.status(HttpStatus.ACCEPTED)
+                    .body(Map.of("message", e.getMessage(), "status", "WAITLIST", "position", e.getPosition()));
+        }
     }
 
     @DeleteMapping("/{id}")
