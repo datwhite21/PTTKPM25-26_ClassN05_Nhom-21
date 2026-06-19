@@ -1,4 +1,4 @@
-# Hệ thống Quản lý Đăng ký Học theo Tín chỉ - Nhóm 21 (Lớp N05)
+# Hệ thống Quản lý Đăng ký Học theo Tín chỉ - Nhóm 17 (Lớp N05)
 
 Dự án môn học **Phân tích & Thiết kế Phần mềm (PTTKPM)** - Học kỳ 2025-2026.
 
